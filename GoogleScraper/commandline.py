@@ -130,6 +130,15 @@ NOTSET = 0
                              'want to use more than one at the same time, just separate with commatas: "google, bing, '
                              'yandex". If you want to use all search engines that are available, give \'*\' as '
                              'argument.')
+    #custom arguments
+    parser.add_argument('--proxy_chain_ips', type=str, action='store', default="local",
+                         help='proxy_chain_ips to forward requests')
+
+    parser.add_argument('--strict', action='store_true', default=False,
+                         help='Defines strict google / bing search')
+
+    parser.add_argument('--no-cache', action='store_true', default=False,
+                             help='Disable caching')
 
     if only_print_help:
         parser.print_help()

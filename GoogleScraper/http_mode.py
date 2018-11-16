@@ -263,9 +263,59 @@ class HttpScrape(SearchEngineScrape, threading.Timer):
         try:
             super().detection_prevention_sleep()
             super().keyword_info()
+            try:
+                rurl = self.base_search_url + urlencode(self.search_params)
+            except UnicodeError:
+                return False
+            if  self.search_engine_name == 'google' and self.config.get('strict'):
+                rurl = rurl + '&tbs=li:1'
+            proxy_chain_ips = self.config.get('proxy_chain_ips')
+            if proxy_chain_ips != "local":
+                proxy_chain_ips = proxy_chain_ips.split(',')
+            else:
+                proxy_chain_ips = []
 
-            request = self.requests.get(self.base_search_url + urlencode(self.search_params),
-                                        headers=self.headers, timeout=timeout)
+            proxies_ch = []
+            for proxy in proxy_chain_ips:
+                proxies_ch.append({
+                   'http': 'http://'+ proxy,
+                   'https': 'http://'+ proxy,
+                  })
+
+            x = 0
+
+            while x < 100:
+                if len(proxies_ch):
+                    proxies = choice(proxies_ch)
+                else:
+                    proxies = {}
+               # print (proxies)
+
+                #try:
+                    #print (self.headers)
+                session = requests.Session()
+
+                session.trust_env = False
+                try:
+                    if not self.config.get('check_proxies'):
+                        request = session.get(rurl, headers=self.headers, timeout=timeout)
+                    else:
+                        request = session.get(rurl, proxies=proxies, headers=self.headers, timeout=timeout)
+                except self.requests.ConnectionError as ce:
+                    request.close()
+                    continue
+                except self.requests.Timeout as te:
+                    request.close()
+                    continue
+                except self.requests.exceptions.RequestException as e:
+                    request.close()
+                    continue
+                logger.warning(str(request.status_code))
+                if request.status_code == 200:
+                    break
+                else:
+                    request.close()
+                x = x + 1
 
             self.requested_at = datetime.datetime.utcnow()
             self.html = request.text
