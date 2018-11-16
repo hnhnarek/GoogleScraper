@@ -252,7 +252,7 @@ class HttpScrape(SearchEngineScrape, threading.Timer):
 
         When return False, the scraper tries to continue with next keyword.
         """
-
+        import requests
         success = True
 
         self.build_search()
