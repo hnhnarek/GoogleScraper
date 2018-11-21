@@ -23,6 +23,8 @@ from sqlalchemy import create_engine, UniqueConstraint
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 
+import GoogleScraper.google_parser_config as google_parser_config
+
 Base = declarative_base()
 
 scraper_searches_serps = Table('scraper_searches_serps', Base.metadata,
@@ -123,6 +125,11 @@ class SearchEngineResultsPage(Base):
                     # fill with nones to prevent key errors
                     [link.update({key: None}) for key in ('snippet', 'title', 'visible_link', 'rating', 'num_reviews') if key not in link]
 
+                    kw_args = {}
+                    for field in google_parser_config.database_link:
+                        kw_args[field] = link.get(field, '')
+
+
                     Link(
                         link=link['link'],
                         snippet=link['snippet'],
@@ -133,7 +140,8 @@ class SearchEngineResultsPage(Base):
                         domain=parsed.netloc,
                         rank=link['rank'],
                         serp=self,
-                        link_type=key
+                        link_type=key,
+                        **kw_args
                     )
 
     def set_values_from_scraper(self, scraper):
@@ -187,6 +195,10 @@ class Link(Base):
 
     def __repr__(self):
         return self.__str__()
+
+
+for field, value in google_parser_config.database_link.items():
+    setattr(Link, field, value)
 
 
 class Proxy(Base):
