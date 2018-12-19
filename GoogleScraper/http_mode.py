@@ -11,6 +11,7 @@ from GoogleScraper.scraping import SearchEngineScrape, get_base_search_url_by_se
 from GoogleScraper.parsing import get_parser_by_search_engine
 from GoogleScraper.user_agents import random_user_agent
 import logging
+from random import choice 
 
 logger = logging.getLogger(__name__)
 
