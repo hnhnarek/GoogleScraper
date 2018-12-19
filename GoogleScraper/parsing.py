@@ -11,6 +11,8 @@ from GoogleScraper.database import SearchEngineResultsPage
 import logging
 from cssselect import HTMLTranslator
 
+import GoogleScraper.google_parser_config as google_parser_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -207,7 +209,13 @@ class Parser():
                     # key are for example 'link', 'snippet', 'visible-url', ...
                     # selector is the selector to grab these items
                     for key, selector in selectors_to_use.items():
-                        serp_result[key] = self.advanced_css(selector, result)
+                        if isinstance(selector, str):
+                            serp_result[key] = self.advanced_css(selector, result)
+                        else:
+                            advanced_css = self.advanced_css(selector[0], result)
+                            res = selector[1](result, advanced_css)
+                            if res:
+                                serp_result[key] = res
 
                     serp_result['rank'] = index + 1
 
@@ -472,6 +480,12 @@ class GoogleParser(Parser):
             )
             if result:
                 self.search_results[key][i]['link'] = unquote(result.group('url'))
+
+
+google_parser_config.dict_merge(
+    GoogleParser.normal_search_selectors,
+    google_parser_config.normal_search_selectors
+)
 
 
 class YandexParser(Parser):
